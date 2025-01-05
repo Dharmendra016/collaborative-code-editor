@@ -12,12 +12,21 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.registerUser = exports.verifyOtp = exports.sendOtp = void 0;
+exports.loginUser = exports.registerUser = exports.verifyOtp = exports.sendOtp = void 0;
 const userSchema_1 = __importDefault(require("../models/userSchema"));
 const otp_generator_1 = __importDefault(require("otp-generator"));
 const otp_1 = require("../models/otp");
 const node_crypto_1 = require("node:crypto");
 require("dotenv/config");
+const jwt_1 = require("../utility/jwt");
+const secret = process.env.HASH_SECRET || "";
+// interface userInterface{
+//     username: string;
+//     email: string;
+//     password: string;
+//     confirmPassword: string;
+//     profilePic: string;
+// }
 const sendOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { email } = req.body;
@@ -123,7 +132,6 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             });
             return;
         }
-        const secret = process.env.HASH_SECRET || "";
         const hashedPassword = (0, node_crypto_1.createHmac)('sha256', secret)
             .update(password)
             .digest('hex');
@@ -138,8 +146,8 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         res.status(200).json({
             success: true,
             message: "successfully created user",
-            user: userCreated
         });
+        return;
     }
     catch (error) {
         console.log(error);
@@ -150,3 +158,51 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
     }
 });
 exports.registerUser = registerUser;
+const loginUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            res.status(400).json({
+                success: false,
+                message: "All fields are required to be filled",
+            });
+            return;
+        }
+        const user = yield userSchema_1.default.findOne({ email });
+        if (!user) {
+            res.status(400).json({
+                success: false,
+                message: "user not found"
+            });
+            return;
+        }
+        const hashedPassword = (0, node_crypto_1.createHmac)('sha256', secret)
+            .update(password)
+            .digest('hex');
+        if (hashedPassword !== (user === null || user === void 0 ? void 0 : user.password)) {
+            res.status(403).json({
+                success: false,
+                message: "password not matched",
+            });
+        }
+        const userData = {
+            username: user === null || user === void 0 ? void 0 : user.username,
+            email: user === null || user === void 0 ? void 0 : user.email,
+            profilePic: user === null || user === void 0 ? void 0 : user.profilePic
+        };
+        const token = (0, jwt_1.getJwtToken)(userData);
+        console.log("token: ", token);
+        res.cookie('token', token).json({
+            success: true,
+            message: `Welcome back ${user === null || user === void 0 ? void 0 : user.username}`
+        });
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error.",
+        });
+    }
+});
+exports.loginUser = loginUser;

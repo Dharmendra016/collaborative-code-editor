@@ -4,7 +4,16 @@ import otpGenerator from "otp-generator"
 import { Otp } from "../models/otp";
 import {createHmac} from "node:crypto"
 import "dotenv/config"
+import { getJwtToken } from "../utility/jwt";
 
+const secret:string = process.env.HASH_SECRET || "";
+// interface userInterface{
+//     username: string;
+//     email: string;
+//     password: string;
+//     confirmPassword: string;
+//     profilePic: string;
+// }
 
 export const sendOtp = async (req: Request, res: Response):Promise<void> => {
     try {
@@ -130,7 +139,7 @@ export const  registerUser = async(req:Request ,res:Response):Promise<void> => {
             });
             return;
         }
-        const secret:string = process.env.HASH_SECRET || ""
+        
         const hashedPassword = createHmac('sha256', secret)
                                 .update(password)
                                 .digest('hex');
@@ -148,11 +157,10 @@ export const  registerUser = async(req:Request ,res:Response):Promise<void> => {
         res.status(200).json({
             success:true,
             message:"successfully created user",
-            user:userCreated
         })
         
         
-
+        return;
 
     } catch (error) {
         console.log(error);
@@ -160,5 +168,60 @@ export const  registerUser = async(req:Request ,res:Response):Promise<void> => {
             success: false,
             message: "Internal Server Error.",
         });
+    }
+}
+
+export const loginUser = async (req:Request , res:Response):Promise<void> => {
+
+    try {
+
+        const {email , password}:{email:string, password:string} = req.body; 
+
+        if( !email || !password ){
+            res.status(400).json({
+                success:false,
+                message:"All fields are required to be filled",
+            })
+            return;
+        }
+        
+        const user = await User.findOne({email});
+        if( !user ){
+            res.status(400).json({
+                success:false,
+                message:"user not found"
+            });
+            return;
+        }
+
+        const hashedPassword = createHmac('sha256', secret)
+        .update(password)
+        .digest('hex');
+
+        if( hashedPassword !== user?.password){
+            res.status(403).json({
+                success:false,
+                message:"password not matched",
+            })
+        }
+
+        const userData = {
+            username: user?.username,
+            email: user?.email,
+            profilePic: user?.profilePic
+        }
+        const token = getJwtToken(userData);
+        console.log("token: ",token);
+        res.cookie('token',token).json({
+            success:true,
+            message:`Welcome back ${user?.username}`
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error.",
+        })
     }
 }
