@@ -12,6 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+<<<<<<< HEAD
 exports.registerUser = void 0;
 const userSchema_1 = __importDefault(require("../models/userSchema"));
 const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -29,11 +30,130 @@ const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* (
                 success: false,
                 message: "User not created."
             });
+=======
+exports.registerUser = exports.verifyOtp = exports.sendOtp = void 0;
+const userSchema_1 = require("../models/userSchema");
+const otp_generator_1 = __importDefault(require("otp-generator"));
+const otp_1 = require("../models/otp");
+const node_crypto_1 = require("node:crypto");
+require("dotenv/config");
+const sendOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            res.status(400).json({
+                success: false,
+                message: "Please Enter you email"
+            });
+            return;
+        }
+        var otp = otp_generator_1.default.generate(6, {
+            digits: true,
+            lowerCaseAlphabets: false,
+            upperCaseAlphabets: false,
+            specialChars: false
+        });
+        var isOtpUnique = yield otp_1.Otp.findOne({ otp });
+        while (isOtpUnique) {
+            otp = otp_generator_1.default.generate(5, {
+                digits: true,
+                upperCaseAlphabets: false,
+                specialChars: false,
+                lowerCaseAlphabets: false
+            });
+            isOtpUnique = yield otp_1.Otp.findOne({ otp });
+        }
+        yield otp_1.Otp.create({
+            email,
+            otp,
+        });
+        res.status(200).json({
+            success: true,
+            message: "Successively created otp",
+        });
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.sendOtp = sendOtp;
+const verifyOtp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { otp, email } = req.body;
+        if (!otp || !email) {
+            res.status(400).json({
+                success: false,
+                message: "Please provide otp."
+            });
+            return;
+        }
+        const updatedOtp = yield otp_1.Otp.find({ email }).sort({ createdAt: -1 }).limit(1);
+        if (updatedOtp[0].otp !== otp) {
+            res.status(400).json({
+                success: false,
+                message: "OTP not matched"
+            });
+            return;
+        }
+        res.status(200).json({
+            success: true,
+            message: "Correct OTP",
+            user: {
+                email,
+            }
+        });
+    }
+    catch (error) {
+        console.log(error);
+    }
+});
+exports.verifyOtp = verifyOtp;
+const registerUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const { username, email, password, confirmPassword } = req.body;
+        if (!email || !username || !password || !confirmPassword) {
+            res.status(400).json({
+                success: false,
+                message: "All field are required."
+            });
+            return;
+        }
+        const user = yield userSchema_1.UserThroughEmail.findOne({ email });
+        if (user) {
+            res.status(400).json({
+                success: false,
+                message: "User already registered."
+            });
+            return;
+        }
+        if (password !== confirmPassword) {
+            res.status(400).json({
+                success: false,
+                message: "Passowrd doesn't match."
+            });
+            return;
+        }
+        const secret = process.env.HASH_SECRET || "";
+        const hashedPassword = (0, node_crypto_1.createHmac)('sha256', secret)
+            .update(password)
+            .digest('hex');
+        const userCreated = yield userSchema_1.UserThroughEmail.create({ username, email, password: hashedPassword, confirmPassword: hashedPassword });
+        if (!userCreated) {
+            res.status(200).json({
+                success: false,
+                message: "user not created",
+            });
+            return;
+>>>>>>> development
         }
         res.status(200).json({
             success: true,
             message: "successfully created user",
+<<<<<<< HEAD
             user
+=======
+            user: userCreated
+>>>>>>> development
         });
     }
     catch (error) {

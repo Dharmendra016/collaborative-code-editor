@@ -3,14 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-<<<<<<< HEAD
-const mongoose_1 = __importDefault(require("mongoose"));
-const userSchema = new mongoose_1.default.Schema({
-=======
 exports.UserThroughGoogle = exports.UserThroughEmail = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const userSchemaforEmail = new mongoose_1.default.Schema({
->>>>>>> development
     username: {
         type: String,
         required: true,
@@ -33,10 +28,6 @@ const userSchemaforEmail = new mongoose_1.default.Schema({
         default: "UserImage",
     }
 }, { timestamps: true });
-<<<<<<< HEAD
-const User = mongoose_1.default.model('user', userSchema);
-exports.default = User;
-=======
 const userSchemaforGoogle = new mongoose_1.default.Schema({
     username: {
         type: String,
@@ -55,4 +46,3 @@ const UserThroughEmail = mongoose_1.default.model('user', userSchemaforEmail);
 exports.UserThroughEmail = UserThroughEmail;
 const UserThroughGoogle = mongoose_1.default.model("googleuser", userSchemaforGoogle);
 exports.UserThroughGoogle = UserThroughGoogle;
->>>>>>> development
