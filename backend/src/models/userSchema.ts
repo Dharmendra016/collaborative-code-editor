@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
+const userSchemaforEmail = new mongoose.Schema({
 
     username:{
         type:String,
@@ -25,5 +25,20 @@ const userSchema = new mongoose.Schema({
     }
 },{timestamps:true})
 
-const User = mongoose.model('user' , userSchema);
-export default User;
+const userSchemaforGoogle = new mongoose.Schema({
+    username: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    googleId: {
+        type: String,
+        required: true
+    }
+})
+const UserThroughEmail = mongoose.model('user' , userSchemaforEmail);
+const UserThroughGoogle = mongoose.model("googleuser", userSchemaforGoogle)
+export {UserThroughEmail, UserThroughGoogle};
