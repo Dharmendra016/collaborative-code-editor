@@ -43,14 +43,22 @@ const projectSchema = new mongoose.Schema({
         ref: 'user',
         required: true
     },
+
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
 
     visibility: { type: String, enum: ['private', 'public'], default: 'private' },
+    
     theme: { type: String, default: 'light' },
+    
     files: [fileSchema],
+    
     activeUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'user' }],
+    
     socketRoomId: { type: String, required: true },
+    
+    version: { type: Number, default: 1 },
+
     history: [
         {
           versionId: { type: String },
@@ -58,5 +66,11 @@ const projectSchema = new mongoose.Schema({
           userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
           changes: { type: String },
         },
-      ],
+    ],
+    tags: [{ type: String }],
+    forkedFrom: { type: mongoose.Schema.Types.ObjectId, ref: 'project' }
 })
+
+
+export const Project = mongoose.model('project', projectSchema);
+
